@@ -1,0 +1,11 @@
+/requirements.txt
+
+/venv_bokeh/
+
+*.egg-info/
+
+*.whl
+
+__pycache__/
+
+*.pyc

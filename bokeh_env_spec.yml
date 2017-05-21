@@ -1,0 +1,35 @@
+name: bokeh_py35
+channels:
+- !!python/unicode
+  'defaults'
+dependencies:
+- !!python/unicode
+  'bokeh=0.12.5=py35_1'
+- !!python/unicode
+  'jinja2=2.9.6=py35_0'
+- !!python/unicode
+  'markupsafe=0.23=py35_2'
+- !!python/unicode
+  'mkl=2017.0.1=0'
+- !!python/unicode
+  'numpy=1.12.1=py35_0'
+- !!python/unicode
+  'pip=9.0.1=py35_1'
+- !!python/unicode
+  'python=3.5.3=3'
+- !!python/unicode
+  'python-dateutil=2.6.0=py35_0'
+- !!python/unicode
+  'pyyaml=3.12=py35_0'
+- !!python/unicode
+  'requests=2.14.2=py35_0'
+- !!python/unicode
+  'setuptools=27.2.0=py35_1'
+- !!python/unicode
+  'six=1.10.0=py35_0'
+- !!python/unicode
+  'tornado=4.5.1=py35_0'
+- !!python/unicode
+  'vs2015_runtime=14.0.25123=0'
+- !!python/unicode
+  'wheel=0.29.0=py35_0'
