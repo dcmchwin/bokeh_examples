@@ -1,7 +1,20 @@
+"""App to demo streaming plus JS interaction.
+
+A sine wave with random noise is streamed from the server.
+Callbacks on the client side allow:
+    - User to pause/unpause the streaming
+    - User variation of signal amplitude
+    - User variation of streaming speed
+
+To run the application, type the following from the "server" dir:
+    $ bokeh serve server_sandbox
+The application will stream on localhost:5006 by default.
+"""
+
 from bokeh.events import ButtonClick
 from bokeh.io import curdoc
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, CustomJS, Button, Slider
+from bokeh.models import ColumnDataSource, Button, Slider
 from bokeh.plotting import figure
 import logging
 import numpy as np
@@ -20,9 +33,13 @@ def _init_param_source():
     Collecting parameters like this is a bit of a hack to enable
     dynamic updating of parameters from the bokeh client."""
 
+    amp_sine = 1
+    amp_rand = 1
     rollover = 100 # length of data to display
     update_delay = 100 # time between delays of update in ms
     param_source = ColumnDataSource(dict(
+        amp_sine=[amp_sine],
+        amp_rand=[amp_rand],
         rollover=[rollover],
         update_delay=[update_delay]
         ))
@@ -30,7 +47,9 @@ def _init_param_source():
 
 
 def _init_data_source():
-    x = np.array([1,2,3])
+    """Initialise the data to stream."""
+
+    x = np.array([1])
     y = np.sin(x)
     avg = np.cumsum(y) / np.arange(1.0, len(y) + 1.0)
     data_source = ColumnDataSource(dict(x=x, y=y, avg=avg))
@@ -64,7 +83,8 @@ def update():
     x_n1 = x_n0 + 0.1
 
     # Assign a new y value
-    y_n1 = np.sin(x_n1) + 0.1 * np.random.rand(1)
+    y_n1 = param_source.data['amp_sine'][0] * np.sin(x_n1) +\
+           param_source.data['amp_rand'][0] * np.random.rand(1)
 
     # Get old last average and use to calculate new average
     avg_n1 = _get_new_avg(data_source,
@@ -81,12 +101,9 @@ def update():
     # logger.debug(param_source.data['update_delay'][0])
 
 
-def alert():
-    return CustomJS(code="alert('hi');")
-
-
 def pause():
     """Pause/unpause the graph."""
+
     if any(cb.callback.__name__ == update.__name__ for
            cb in curdoc().session_callbacks):
         curdoc().remove_periodic_callback(update)
@@ -94,7 +111,6 @@ def pause():
         curdoc().add_periodic_callback(
             update,
             param_source.data['update_delay'][0])
-
 
 # Set up param_source
 param_source = _init_param_source()
@@ -110,8 +126,8 @@ fig.line(source=data_source, x='x', y='avg', line_color="red")
 # Set up pause button
 btn = Button(label='Pause')
 btn.on_click(pause)
-# btn.js_on_event(ButtonClick, alert())
 
+# Set up slider to change update speed
 def _change_update_delay(attr, old, new):
     logger.debug('Slider has been moved, new {}: {}'.format(attr, new))
     param_source.data['update_delay'][0] = new
@@ -121,11 +137,29 @@ def _change_update_delay(attr, old, new):
 
 delay_slider = Slider(start=10, end=100, value=50, step=10,
                       title='Streaming Delay')
-# delay_slider.js_on_change('value', change_update_delay)
 delay_slider.on_change('value', _change_update_delay)
+
+# Set up sider to change amplitude of sine wave
+def _change_amp_sine(attr, old, new):
+    logger.debug('Slider has been moved, new {}: {}'.format(attr, new))
+    param_source.data['amp_sine'][0] = new
+
+amp_sine_slider = Slider(start=0.1, end=2, value=1, step=0.1,
+                         title='Sinusoid Amplitude')
+amp_sine_slider.on_change('value', _change_amp_sine)
+
+# Set up sider to change amplitude of random part of data
+def _change_amp_rand(attr, old, new):
+    logger.debug('Slider has been moved, new {}: {}'.format(attr, new))
+    param_source.data['amp_rand'][0] = new
+
+amp_rand_slider = Slider(start=0.1, end=2, value=1, step=0.1,
+                         title='Random Amplitude')
+amp_rand_slider.on_change('value', _change_amp_rand)
 
 # Add figure, pause button and sliders to the document
 curdoc().add_periodic_callback(update,
                                param_source.data['update_delay'][0])
 
-curdoc().add_root(column(delay_slider, btn, fig))
+curdoc().add_root(column(delay_slider, amp_sine_slider, amp_rand_slider,
+                         btn, fig))
